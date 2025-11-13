@@ -1,0 +1,31 @@
+@startuml Login Sequence Diagram
+actor User
+participant "UI/Client" as UI
+participant "Auth Controller" as Controller
+participant "Auth Middleware" as Middleware
+participant "Auth Service" as Service
+participant "Database" as DB
+participant "Session Manager" as Session
+
+User -> UI: Nhập username/password
+UI -> Controller: POST /api/auth/login
+Controller -> Service: authenticate(credentials)
+Service -> DB: findUserByUsername()
+DB --> Service: userData
+
+alt Mật khẩu đúng
+    Service -> Service: comparePassword()
+    Service -> Session: createSession(userId)
+    Session -> DB: saveSession()
+    DB --> Session: sessionId
+    Session --> Service: sessionToken
+    Service --> Controller: {token, user, role}
+    Controller --> UI: 200 OK + token
+    UI --> User: Đăng nhập thành công
+else Mật khẩu sai
+    Service --> Controller: AuthenticationError
+    Controller --> UI: 401 Unauthorized
+    UI --> User: Thông báo lỗi
+end
+
+@enduml

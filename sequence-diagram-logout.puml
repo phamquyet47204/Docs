@@ -1,0 +1,33 @@
+@startuml Logout Sequence Diagram
+actor User
+participant "UI/Client" as UI
+participant "Auth Controller" as Controller
+participant "Auth Middleware" as Middleware
+participant "Session Manager" as Session
+participant "Database" as DB
+
+User -> UI: Click đăng xuất
+UI -> Controller: POST /api/auth/logout + token
+Controller -> Middleware: verifyToken(token)
+Middleware -> Session: validateSession(token)
+Session -> DB: findSession(token)
+DB --> Session: sessionData
+
+alt Session hợp lệ
+    Session --> Middleware: valid
+    Middleware --> Controller: proceed
+    Controller -> Session: destroySession(token)
+    Session -> DB: deleteSession(token)
+    DB --> Session: success
+    Session --> Controller: success
+    Controller --> UI: 200 OK
+    UI -> UI: clearLocalToken()
+    UI --> User: Đăng xuất thành công
+else Session không hợp lệ
+    Session --> Middleware: invalid
+    Middleware --> Controller: 401 Unauthorized
+    Controller --> UI: 401 Unauthorized
+    UI --> User: Session hết hạn
+end
+
+@enduml

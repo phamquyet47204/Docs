@@ -1,0 +1,54 @@
+@startuml Authentication Middleware Sequence Diagram
+actor User
+participant "UI/Client" as UI
+participant "Auth Middleware" as Middleware
+participant "Session Manager" as Session
+participant "Role Manager" as Role
+participant "Protected Controller" as Controller
+participant "Database" as DB
+
+User -> UI: Request protected resource
+UI -> Middleware: GET /api/protected + token
+
+== Xác thực ==
+Middleware -> Middleware: extractToken(request)
+
+alt Token không có
+    Middleware --> UI: 401 Unauthorized
+    UI --> User: Yêu cầu đăng nhập
+else Token có
+    Middleware -> Session: validateSession(token)
+    Session -> DB: findSession(token)
+    DB --> Session: sessionData
+    
+    alt Session hợp lệ
+        Session -> Session: checkExpiry()
+        Session --> Middleware: {userId, role}
+        
+        == Phân quyền ==
+        Middleware -> Role: checkPermission(role, resource)
+        Role -> DB: getRolePermissions(role)
+        DB --> Role: permissions
+        
+        alt Có quyền truy cập
+            Role --> Middleware: authorized
+            Middleware -> Middleware: attachUser(request)
+            Middleware -> Controller: next()
+            Controller -> DB: processRequest()
+            DB --> Controller: data
+            Controller --> UI: 200 OK + data
+            UI --> User: Hiển thị dữ liệu
+        else Không có quyền
+            Role --> Middleware: forbidden
+            Middleware --> UI: 403 Forbidden
+            UI --> User: Không có quyền truy cập
+        end
+        
+    else Session không hợp lệ/hết hạn
+        Session --> Middleware: invalid
+        Middleware --> UI: 401 Unauthorized
+        UI --> User: Session hết hạn
+    end
+end
+
+@enduml

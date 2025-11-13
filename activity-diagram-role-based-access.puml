@@ -1,0 +1,61 @@
+@startuml Role-Based Access Control Activity Diagram
+start
+:User request với token;
+:Middleware xác thực token;
+:Lấy user role từ session;
+
+if (Role type?) then (ADMIN)
+  :Full access to all resources;
+  :Có thể quản lý users;
+  :Có thể quản lý roles;
+  :Có thể xem logs;
+  :Proceed to controller;
+  
+elseif (TEACHER) then
+  :Access to teaching resources;
+  if (Resource type?) then (Course Management)
+    :Kiểm tra ownership;
+    if (Teacher owns course?) then (yes)
+      :Allow CRUD operations;
+    else (no)
+      :Allow READ only;
+    endif
+  elseif (Student Grades) then
+    :Allow view/edit grades;
+  elseif (Attendance) then
+    :Allow mark attendance;
+  else (Other)
+    :Deny access;
+    :Return 403 Forbidden;
+    stop
+  endif
+  :Proceed to controller;
+  
+elseif (STUDENT) then
+  :Access to student resources;
+  if (Resource type?) then (Own Profile)
+    :Allow view/edit own data;
+  elseif (Courses) then
+    :Allow view enrolled courses;
+  elseif (Grades) then
+    :Allow view own grades;
+  elseif (Attendance) then
+    :Allow view own attendance;
+  else (Other)
+    :Deny access;
+    :Return 403 Forbidden;
+    stop
+  endif
+  :Proceed to controller;
+  
+else (GUEST/Unknown)
+  :Deny access;
+  :Return 403 Forbidden;
+  stop
+endif
+
+:Execute business logic;
+:Return response;
+stop
+
+@enduml

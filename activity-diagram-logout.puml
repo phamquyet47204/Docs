@@ -1,0 +1,24 @@
+@startuml Logout Activity Diagram
+start
+:User click nút đăng xuất;
+:Gửi request đăng xuất với token;
+
+:Middleware xác thực token;
+if (Token hợp lệ?) then (no)
+  :Trả về 401 Unauthorized;
+  :Client xóa token local;
+  stop
+else (yes)
+  :Tìm session trong database;
+  if (Session tồn tại?) then (yes)
+    :Xóa session khỏi database;
+    :Ghi log đăng xuất;
+  endif
+  :Trả về success response;
+  :Client xóa token khỏi storage;
+  :Xóa user data khỏi state;
+  :Chuyển về trang đăng nhập;
+  stop
+endif
+
+@enduml

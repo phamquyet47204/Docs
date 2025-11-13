@@ -1,0 +1,31 @@
+@startuml Authentication State Diagram
+[*] --> Unauthenticated
+
+Unauthenticated --> LoginAttempt : Nhập credentials
+LoginAttempt --> Authenticated : Credentials hợp lệ
+LoginAttempt --> Unauthenticated : Credentials không hợp lệ
+LoginAttempt --> Locked : Quá nhiều lần thử sai
+
+Authenticated --> PasswordResetRequired : Password expired
+Authenticated --> Unauthenticated : Logout/Session expired
+
+PasswordResetRequired --> ResetInProgress : Request reset
+ResetInProgress --> Unauthenticated : Reset thành công
+ResetInProgress --> PasswordResetRequired : Reset thất bại
+
+Locked --> Unauthenticated : Unlock sau thời gian chờ
+Locked --> Unauthenticated : Admin unlock
+
+Unauthenticated --> [*]
+
+note right of Authenticated
+  User có quyền truy cập
+  dựa trên role
+end note
+
+note right of Locked
+  Account bị khóa sau
+  5 lần đăng nhập sai
+end note
+
+@enduml

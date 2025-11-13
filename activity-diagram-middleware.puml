@@ -1,0 +1,55 @@
+@startuml Authentication Middleware Activity Diagram
+start
+:Request đến protected endpoint;
+
+partition "Authentication Middleware" {
+  :Trích xuất token từ header;
+  
+  if (Token có mặt?) then (no)
+    :Trả về 401 Unauthorized;
+    stop
+  endif
+  
+  :Verify token signature;
+  if (Token hợp lệ?) then (no)
+    :Trả về 401 Invalid Token;
+    stop
+  endif
+  
+  :Tìm session trong database;
+  if (Session tồn tại?) then (no)
+    :Trả về 401 Session Not Found;
+    stop
+  endif
+  
+  if (Session hết hạn?) then (yes)
+    :Xóa session;
+    :Trả về 401 Session Expired;
+    stop
+  endif
+  
+  :Lấy user info và role;
+  :Cập nhật session expiry;
+}
+
+partition "Authorization Middleware" {
+  :Kiểm tra quyền truy cập;
+  :Lấy required permissions cho endpoint;
+  :Lấy user permissions theo role;
+  
+  if (User có quyền?) then (no)
+    :Ghi log unauthorized access;
+    :Trả về 403 Forbidden;
+    stop
+  endif
+  
+  :Attach user vào request object;
+  :Ghi log access;
+}
+
+:Chuyển request đến controller;
+:Xử lý business logic;
+:Trả về response;
+stop
+
+@enduml

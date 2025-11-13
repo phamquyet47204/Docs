@@ -1,0 +1,29 @@
+@startuml Session State Diagram
+[*] --> NoSession : User chưa đăng nhập
+
+NoSession --> Authenticating : Gửi credentials
+Authenticating --> Active : Xác thực thành công
+Authenticating --> NoSession : Xác thực thất bại
+
+Active --> Active : Request hợp lệ\n(refresh expiry)
+Active --> Expired : Timeout/Inactivity
+Active --> Terminated : Đăng xuất
+Active --> Terminated : Admin force logout
+
+Expired --> NoSession : Clear session data
+Terminated --> NoSession : Clear session data
+
+NoSession --> [*]
+
+note right of Active
+  Session được lưu trong DB
+  Token được gửi kèm mỗi request
+  Expiry time được refresh
+end note
+
+note right of Expired
+  Session timeout sau
+  30 phút không hoạt động
+end note
+
+@enduml

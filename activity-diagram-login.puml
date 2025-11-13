@@ -1,0 +1,43 @@
+@startuml Login Activity Diagram
+start
+:User truy cập trang đăng nhập;
+:Nhập username và password;
+:Gửi request đăng nhập;
+
+:Middleware kiểm tra rate limit;
+if (Quá nhiều request?) then (yes)
+  :Trả về 429 Too Many Requests;
+  stop
+endif
+
+:Tìm user trong database;
+if (User tồn tại?) then (no)
+  :Trả về lỗi "Invalid credentials";
+  stop
+endif
+
+if (Account bị khóa?) then (yes)
+  :Trả về lỗi "Account locked";
+  stop
+endif
+
+:So sánh password hash;
+if (Password đúng?) then (no)
+  :Tăng số lần đăng nhập sai;
+  if (Đạt giới hạn?) then (yes)
+    :Khóa account;
+  endif
+  :Trả về lỗi "Invalid credentials";
+  stop
+else (yes)
+  :Reset số lần đăng nhập sai;
+  :Tạo session token;
+  :Lưu session vào database;
+  :Ghi log đăng nhập;
+  :Trả về token và user info;
+  :Client lưu token;
+  :Chuyển đến trang chủ;
+  stop
+endif
+
+@enduml

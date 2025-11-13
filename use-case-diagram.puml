@@ -1,0 +1,50 @@
+@startuml Authentication Use Case Diagram
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as user
+actor "Admin" as admin
+actor "Student" as student
+actor "Teacher" as teacher
+
+rectangle "Authentication System" {
+  usecase "Đăng nhập" as UC1
+  usecase "Đăng xuất" as UC2
+  usecase "Đặt lại mật khẩu" as UC3
+  usecase "Xác thực middleware" as UC4
+  usecase "Quản lý phiên" as UC5
+  usecase "Kiểm tra quyền truy cập" as UC6
+  usecase "Phân quyền theo vai trò" as UC7
+}
+
+user <|-- admin
+user <|-- student
+user <|-- teacher
+
+user --> UC1
+user --> UC2
+user --> UC3
+
+UC1 ..> UC4 : <<include>>
+UC1 ..> UC5 : <<include>>
+UC2 ..> UC5 : <<include>>
+
+UC4 ..> UC6 : <<include>>
+UC6 ..> UC7 : <<include>>
+
+admin --> UC7
+teacher --> UC7
+student --> UC7
+
+note right of UC4
+  Middleware xác thực
+  mọi request
+end note
+
+note right of UC7
+  - Admin: Full access
+  - Teacher: Manage courses
+  - Student: View only
+end note
+
+@enduml
